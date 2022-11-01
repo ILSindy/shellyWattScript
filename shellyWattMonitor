@@ -1,0 +1,40 @@
+ // minimum watts usage .. above this value the appliance is considered as "started".. 
+// below this value and timesInactive is reached the appliance is considered as finished. 
+let minUsage = 10; // Watts
+let bool = 0;
+let alertTimer = null;
+
+function loxone(state){
+  Shelly.call("http.get",{ url: 'http://shelly:shelly@192.168.1.104/dev/sps/io/Test/' + state},null,null);
+};
+
+function start(){
+  alertTimer = Timer.set(1000,true,
+    function(){
+      Shelly.call(
+        "switch.getStatus",
+        { id: 0 },
+        function (res, error_code, error_msg, ud) {
+          print(res.apower)
+          if (res.apower > minUsage) {
+            if(bool === 0){
+              loxone('1');
+              print("ON");
+              bool = 1;
+            };
+          };
+          if (res.apower < minUsage){
+            if (bool === 1){
+              loxone('0');
+              print("OFF");
+              bool = 0;
+            }
+          }
+        },
+        null
+     );
+    },
+  null);
+};
+  
+start();
